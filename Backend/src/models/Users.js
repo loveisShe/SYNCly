@@ -25,6 +25,16 @@ const userSchema = new mongoose.Schema(
         resetPasswordExpires: {
             type: Date,
             select: false
+        },
+        status: {
+            type: String,
+            enum: ["online", "offline"],
+            default: "offline"
+        },
+
+        lastSeen: {
+            type: Date,
+            default: null
         }
     },
     {
@@ -32,6 +42,6 @@ const userSchema = new mongoose.Schema(
     }
 );
 
-const User = mongoose.model("User" , userSchema);
+const User = mongoose.model("User", userSchema);
 
-module.exports = User ;
+module.exports = User;

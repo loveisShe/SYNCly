@@ -7,6 +7,8 @@ const signup = async(req , res) => {
     try{
         const {name , email , password} = req.body;
 
+        const normalizeEmail = email.trim().toLowerCase();
+
         if(!name || !email || !password){
             return res.status(400).json({
                 success: false,
@@ -21,7 +23,7 @@ const signup = async(req , res) => {
             });
         }
 
-        const existingUser = await User.findOne({ email });
+        const existingUser = await User.findOne({ email: normalizeEmail });
 
         if(existingUser){
             return res.status(409).json({
@@ -32,15 +34,13 @@ const signup = async(req , res) => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const normalizeEmail = email.trim().toLowerCase();
-
         const newUser = await User.create({
             name,
             email: normalizeEmail,
             password: hashedPassword
         });
 
-        return res.status(201).json({
+        return res.status(200).json({
             success: true,
             message: "Account created Successfully",
             user: {
@@ -99,7 +99,7 @@ const login = async(req, res) => {
             { expiresIn: "7d" }
         );
 
-        return res.status(201).json({
+        return res.status(200).json({
             success: true,
             message: "Login Sucessfull",
             token,
@@ -126,7 +126,7 @@ const getme = async(req, res) => {
     });
 };
 
-const forgetPassword = async(req, res) => {
+const forgotPassword = async(req, res) => {
     try{
         const { email } = req.body;
 
@@ -172,9 +172,73 @@ const forgetPassword = async(req, res) => {
     }
 };
 
+const resetPassword = async(req, res) => {
+    try{
+        const { token , newPassword } = req.body;
+        
+        if(!token || !newPassword){
+            return res.status(404).json({
+                success: false,
+                message: "token an new Password are required"
+            });
+        }
+
+        if(newPassword.length < 6){
+            return res.status(400).json({
+                success: false,
+                message: "Password must be at least 6 characters"
+            });
+        }
+
+        const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+        const user = await User.findOne({
+            resetPasswordToken: hashedToken,
+            resetPasswordExpires: { $gt: Date.now() }
+        });
+
+        if(!user){
+            return res.status(400).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        const isSamePassword = await bcrypt.compare(newPassword, user.password);
+
+        if(isSamePassword){
+            return res.status(400).json({
+                success: false ,
+                message: "New password must be different from your current password"
+            });
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword , 10);
+
+        user.password = hashedPassword;
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpires = undefined;
+
+        await user.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Password updated successfully"
+        });
+    }catch(error){
+        console.log("Reset Password error: " , error);
+
+        return res.status(500).json({
+            success: false ,
+            message: "Internal server error"
+        });
+    }
+};
+
 module.exports = {
     signup,
     login,
     getme,
-    forgetPassword
+    forgotPassword,
+    resetPassword
 };

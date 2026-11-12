@@ -3,12 +3,14 @@ require("dotenv").config();
 
 const connectDB = require("./src/config/db");
 const authRouts = require("./src/routes/authRoutes");
+const roomRoutes = require("./src/routes/roomRoutes");
 
 const app = express();
 
 // app.use(cors());
 app.use(express.json());
 app.use("/api/auth" , authRouts);
+app.use("/api/rooms" , roomRoutes);
 
 app.get("/health" , (req, res) => {
     res.status(200).json({

@@ -1,1 +1,5 @@
 http://localhost:8000/api/auth/signup
+http://localhost:8000/api/auth/login
+http://localhost:8000/api/auth/getme
+http://localhost:8000/api/auth/forgot-password
+http://localhost:8000/api/auth/reset-password
