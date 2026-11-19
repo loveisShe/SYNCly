@@ -36,11 +36,6 @@ const roomSchema = new mongoose.Schema(
         maxParticipants: {
             type: Number,
             default: 6
-        },
-        status: {
-            type: String,
-            enum: ["active" , "completed"],
-            default: "active"
         }
     },
     {
